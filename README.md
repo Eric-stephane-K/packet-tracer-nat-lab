@@ -159,4 +159,4 @@ Master Réseaux / Cybersécurité / IA
 
 ## 📄 Licence
 
-Projet académique – usage pédagogique.
+Projet Personnel – usage pédagogique.
