@@ -1,0 +1,174 @@
+R1#show running-config
+Building configuration...
+
+Current configuration : 3463 bytes
+!
+version 15.1
+no service timestamps log datetime msec
+no service timestamps debug datetime msec
+no service password-encryption
+!
+hostname R1
+!
+!
+!
+!
+!
+!
+!
+!
+no ip cef
+no ipv6 cef
+!
+!
+!
+username admin privilege 15 secret 5 $1$mERr$UPnpoXgq3p9ZQqPhdTrS8/
+!
+!
+license udi pid CISCO2911/K9 sn FTX1524O0Z2-
+!
+!
+!
+!
+!
+!
+!
+!
+!
+!
+!
+ip ssh version 2
+ip domain-name example.com
+!
+!
+spanning-tree mode pvst
+!
+!
+!
+!
+!
+!
+interface GigabitEthernet0/0
+ description TRUNK_TO_SW1
+ no ip address
+ duplex auto
+ speed auto
+!
+interface GigabitEthernet0/0.10
+ description VLAN10_USERS
+ encapsulation dot1Q 10
+ ip address 192.168.10.1 255.255.255.0
+ ip nat inside
+ ip access-group ACL-USERS-IN in
+!
+interface GigabitEthernet0/0.20
+ description VLAN20_IT
+ encapsulation dot1Q 20
+ ip address 192.168.20.1 255.255.255.0
+ ip nat inside
+!
+interface GigabitEthernet0/0.30
+ description VLAN30_SERVERS
+ encapsulation dot1Q 30
+ ip address 192.168.30.1 255.255.255.0
+ ip nat inside
+!
+interface GigabitEthernet0/0.40
+ description VLAN40_GUEST
+ encapsulation dot1Q 40
+ ip address 192.168.40.1 255.255.255.0
+ ip nat inside
+ ip access-group ACL-GUEST-IN in
+!
+interface GigabitEthernet0/0.60
+ description VLAN60_DATABASE
+ encapsulation dot1Q 60
+ ip address 192.168.60.1 255.255.255.0
+ ip nat inside
+ ip access-group ACL-DB-IN out
+!
+interface GigabitEthernet0/1
+ description DMZ_INTERFACE
+ ip address 192.168.50.1 255.255.255.0
+ ip nat inside
+ duplex auto
+ speed auto
+!
+interface GigabitEthernet0/2
+ no ip address
+ duplex auto
+ speed auto
+ shutdown
+!
+interface Serial0/0/0
+ description LINK_TO_ISP
+ ip address 203.0.113.2 255.255.255.252
+ encapsulation ppp
+ ip nat outside
+ ip access-group ACL-WAN-IN in
+!
+interface Serial0/0/1
+ no ip address
+ clock rate 2000000
+ shutdown
+!
+interface Vlan1
+ no ip address
+ shutdown
+!
+ip nat inside source list 1 interface Serial0/0/0 overload
+ip nat inside source static tcp 192.168.50.10 80 203.0.113.2 80 
+ip nat inside source static tcp 192.168.50.10 443 203.0.113.2 443 
+ip classless
+ip route 0.0.0.0 0.0.0.0 203.0.113.1 
+ip route 8.8.8.0 255.255.255.0 203.0.113.1 
+!
+ip flow-export version 9
+!
+!
+ip access-list standard ACL-VTY-IT-ONLY
+ permit 192.168.20.0 0.0.0.255
+ deny any
+ip access-list extended ACL-GUEST-IN
+ deny ip 192.168.40.0 0.0.0.255 192.168.0.0 0.0.255.255
+ permit ip 192.168.40.0 0.0.0.255 any
+access-list 1 permit 192.168.0.0 0.0.255.255
+ip access-list extended ACL-DB-IN
+ permit tcp host 192.168.30.20 host 192.168.60.30 eq 3306
+ deny tcp any host 192.168.60.30 eq 3306
+ permit ip any any
+ip access-list extended ACL-USERS-IN
+ permit ip 192.168.20.0 0.0.0.255 192.168.10.0 0.0.0.255
+ permit icmp 192.168.10.0 0.0.0.255 192.168.20.0 0.0.0.255 echo-reply
+ permit udp 192.168.10.0 0.0.0.255 host 192.168.30.10 eq domain
+ permit tcp 192.168.10.0 0.0.0.255 host 192.168.30.10 eq domain
+ permit tcp 192.168.10.0 0.0.0.255 host 192.168.50.10 eq www
+ permit tcp 192.168.10.0 0.0.0.255 host 192.168.50.10 eq 443
+ permit ip 192.168.10.0 0.0.0.255 host 192.168.30.20
+ deny ip 192.168.10.0 0.0.0.255 192.168.20.0 0.0.0.255
+ deny ip 192.168.10.0 0.0.0.255 192.168.0.0 0.0.255.255
+ permit ip 192.168.10.0 0.0.0.255 any
+ip access-list extended ACL-WAN-IN
+ permit tcp any host 203.0.113.2 eq www
+ permit tcp any host 203.0.113.2 eq 443
+ permit icmp any host 203.0.113.2 echo-reply
+ deny ip any 192.168.0.0 0.0.255.255
+ deny ip any any
+!
+!
+!
+!
+!
+line con 0
+!
+line aux 0
+!
+line vty 0 4
+ access-class ACL-VTY-IT-ONLY in
+ login local
+ transport input ssh
+!
+!
+!
+end
+

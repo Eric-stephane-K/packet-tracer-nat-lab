@@ -1,162 +1,118 @@
-# Cisco NAT Laboratory – Packet Tracer  
-### PAT, NAT statique et NAT dynamique 
-
----
+# 🔐 Architecture Réseau Sécurisée avec ACL, NAT, DMZ et Micro-segmentation (Cisco Packet Tracer)
 
 ## 📌 Présentation du projet
 
-Ce projet présente une **implémentation complète et comparative du Network Address Translation (NAT)** dans un environnement simulé à l’aide de **Cisco Packet Tracer**.
+Ce projet consiste en la conception et l’implémentation d’une architecture réseau sécurisée simulant une PME, réalisée avec Cisco Packet Tracer.
 
-Il couvre :
-- le **NAT Overload (PAT)**,
-- le **NAT statique** pour la publication de services,
-- le **NAT dynamique** avec pool d’adresses publiques,
-- des mécanismes de **réalisme réseau** (routage ISP, filtrage des IP privées).
-
-Le projet est conçu dans une optique **académique (niveau Master)** et peut également servir de **portfolio technique**.
-
----
-
-## 🎯 Objectifs pédagogiques
-
-- Comprendre le rôle et la nécessité du NAT dans les réseaux IPv4
-- Implémenter et comparer les trois principaux types de NAT
-- Observer les limites opérationnelles du NAT dynamique
-- Mettre en œuvre des bonnes pratiques proches d’un environnement réel
-- Savoir valider et documenter une configuration réseau
+L’objectif est de démontrer des compétences pratiques en cybersécurité réseau à travers :
+- la segmentation réseau par VLAN
+- l’application de politiques de contrôle d’accès (ACL)
+- la mise en place d’une DMZ
+- l’utilisation de NAT (PAT et NAT statique)
+- l’isolation d’une base de données (micro-segmentation)
+- la validation par des tests techniques réels
 
 ---
 
-## 🧱 Topologie du laboratoire
+## 🧠 Objectifs de sécurité
 
-### Éléments
-- 1 routeur Entreprise (**R1**)
-- 1 routeur Fournisseur d’accès (**R2 – ISP**)
-- 1 switch LAN
-- 3 hôtes internes
-- 1 serveur Web interne
-- 1 réseau Internet simulé
+L’architecture a été conçue pour respecter les principes suivants :
 
-📷 Voir : `screenshots/topology.png`
+- 🔒 Principe du moindre privilège
+- 🧱 Segmentation des zones réseau
+- 🌐 Exposition contrôlée des services publics
+- 🚫 Isolation des réseaux sensibles
+- 🔄 Validation par des preuves techniques (ACL hits, NAT, tests)
 
 ---
 
-## 🌐 Plan d’adressage
+## 🏗️ Architecture du réseau
 
-### LAN interne
-- Réseau : `192.168.10.0/24`
-- Passerelle : `192.168.10.1`
+### Segmentation par VLAN
 
-### WAN (R1–R2)
-- Réseau : `203.0.113.0/30`
-
-### Internet simulé
-- Réseau : `198.51.100.0/24`
-
-### IP publiques routées
-- NAT statique : `203.0.113.100`
-- Pool NAT dynamique : `203.0.113.200 – 203.0.113.202`
-
----
-
-## 🔁 Types de NAT implémentés
-
-### 1️⃣ NAT Overload (PAT)
-- Partage d’une seule IP publique
-- Traduction basée sur les ports
-- Utilisation d’une ACL dédiée (`ACL_PAT`)
-
-📷 Capture : `screenshots/nat_pat.png`
+| Zone | VLAN | Réseau |
+|------|------|--------|
+| USERS | 10 | 192.168.10.0/24 |
+| IT | 20 | 192.168.20.0/24 |
+| SERVERS | 30 | 192.168.30.0/24 |
+| GUEST | 40 | 192.168.40.0/24 |
+| DMZ | - | 192.168.50.0/24 |
+| DATABASE | 60 | 192.168.60.0/24 |
+| WAN | - | 203.0.113.0/30 |
+| Internet simulé | - | 8.8.8.0/24 |
 
 ---
 
-### 2️⃣ NAT statique
-- Publication du serveur interne `192.168.10.100`
-- Correspondance permanente avec `203.0.113.100`
-- IP publique représentée par une **interface loopback**
-- Routage /32 côté ISP
+## 🔐 Contrôles de sécurité implémentés
 
-📷 Capture : `screenshots/nat_static.png`
+### 1. Accès administrateur sécurisé
+- Accès SSH autorisé uniquement depuis le VLAN IT
 
 ---
 
-### 3️⃣ NAT dynamique
-- Attribution dynamique depuis un pool d’IP publiques
-- Une IP publique par hôte interne
-- Illustration de l’épuisement du pool
-
-📷 Capture : `screenshots/nat_dynamic.png`
-
----
-
-## 🔐 Sécurité et réalisme
-
-Afin de reproduire un comportement Internet réaliste :
-- une **ACL côté ISP** bloque les adresses privées sur le WAN,
-- le NAT devient indispensable pour toute connectivité externe,
-- les IP publiques ne sont pas directement attachées aux interfaces.
-
-📷 Capture : `screenshots/acl_matches.png`
+### 2. Segmentation des utilisateurs (ACL USERS)
+- Autorisation vers :
+  - DNS interne
+  - serveur applicatif
+  - serveur web DMZ
+- Interdiction d’accès au VLAN IT
 
 ---
 
-## 📁 Structure du dépôt
-
-```
-packet-tracer-nat-lab/
-├── README.md
-├── topology/
-│   └── nat_topology.pkt
-├── configs/
-│   ├── R1_config.txt
-│   └── R2_config.txt
-├── screenshots/
-│   ├── topology.png
-│   ├── nat_pat.png
-│   ├── nat_static.png
-│   ├── nat_dynamic.png
-│   └── acl_matches.png
-└── docs/
-    └── nat_explanation_master.md
-```
+### 3. Isolation du réseau invité (ACL GUEST)
+- Accès Internet autorisé
+- Accès aux réseaux internes bloé
+- Accès à la gateway explicitement autorisé
 
 ---
 
-## 🧪 Méthodes de validation
-
-- `show ip nat translations`
-- `show ip nat statistics`
-- `show access-lists`
-- Tests ICMP et HTTP depuis les réseaux interne et externe
-
-Les captures fournies permettent de valider le fonctionnement **sans exécuter Packet Tracer**.
+### 4. Publication DMZ (NAT statique)
+- Serveur web accessible depuis Internet via :
+  - `http://203.0.113.2`
+- Filtrage WAN avec ACL
 
 ---
 
-## 🛠️ Outils et technologies
-
-- Cisco Packet Tracer
-- Cisco IOS
-- IPv4
-- NAT / ACL / Routage statique
+### 5. NAT dynamique (PAT)
+- Accès Internet pour USERS, IT et GUEST
 
 ---
 
-## 📚 Références conceptuelles
-
-- RFC 1918 – Address Allocation for Private Internets
-- RFC 3022 – Traditional NAT
-- Documentation Cisco IOS NAT
-
----
-
-## 👤 Auteur
-
-**Eric Stephane**  
-Master Réseaux / Cybersécurité / IA 
+### 6. Micro-segmentation base de données
+- VLAN dédié (VLAN 60)
+- Accès autorisé uniquement depuis le serveur applicatif
+- Blocage de tous les autres accès
 
 ---
 
-## 📄 Licence
+## 🧪 Validation technique
 
-Projet académique – usage pédagogique.
+Les contrôles ont été validés à travers :
+
+- tests de connectivité (ping, telnet, HTTP)
+- vérification des ACL via les compteurs (match)
+- analyse des translations NAT
+
+---
+
+## 📊 Résultats clés
+
+| Test | Résultat |
+|------|--------|
+| IT → SSH routeur | ✅ |
+| USERS → IT | ❌ |
+| USERS → DMZ Web | ✅ |
+| GUEST → interne | ❌ |
+| GUEST → Internet | ✅ |
+| Internet → DMZ | ✅ |
+| APP → DB | ✅ |
+| USER → DB | ❌ |
+
+---
+
+## 📸 Captures d’écran
+
+Les preuves sont disponibles dans :
+
+```text
+docs/screenshots/
