@@ -114,5 +114,20 @@ Les contrôles ont été validés à travers :
 
 Les preuves sont disponibles dans :
 
+<<<<<<< HEAD
 ```text
 docs/screenshots/
+=======
+---
+
+## 👤 Auteur
+
+**Eric Stephane**  
+Master Réseaux / Cybersécurité / IA 
+
+---
+
+## 📄 Licence
+
+Projet Personnel – usage pédagogique.
+>>>>>>> ced3fe11bb8eb4e1f8875882e50111d61202d982
